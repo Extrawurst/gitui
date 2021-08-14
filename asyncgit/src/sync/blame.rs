@@ -50,7 +50,15 @@ pub fn blame_file(
 
     let commit_id = utils::get_head_repo(&repo)?;
 
-    let spec = format!("{}:{}", commit_id.to_string(), file_path);
+    let spec = if cfg!(unix) {
+        format!("{}:{}", commit_id.to_string(), file_path)
+    } else {
+        format!(
+            "{}:{}",
+            commit_id.to_string(),
+            file_path.replace("\\", "/")
+        )
+    };
 
     let object = repo.revparse_single(&spec)?;
     let blob = repo.find_blob(object.id())?;
