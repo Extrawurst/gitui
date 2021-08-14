@@ -311,9 +311,10 @@ impl App {
                     None => self.commit.show_editor(),
                 };
 
-                if let Err(e) = result {
+                if let Err(_e) = result {
                     let msg =
-                        format!("failed to launch editor:\n{}", e);
+                        format!("Failed to open the external editor. Make sure the\n\
+                        environment variable GIT_EDITOR is set.");
                     log::error!("{}", msg.as_str());
                     self.msg.show_error(msg.as_str())?;
                 }
