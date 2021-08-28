@@ -4,7 +4,6 @@ use crate::{
 	AsyncGitNotification, CWD,
 };
 use crossbeam_channel::Sender;
-use git2::Oid;
 use scopetime::scope_time;
 use std::{
 	sync::{
@@ -29,6 +28,7 @@ pub enum FetchStatus {
 ///
 pub struct AsyncLog {
 	current: Arc<Mutex<Vec<CommitId>>>,
+	current_head: Arc<Mutex<Option<CommitId>>>,
 	sender: Sender<AsyncGitNotification>,
 	pending: Arc<AtomicBool>,
 	background: Arc<AtomicBool>,
@@ -47,6 +47,7 @@ impl AsyncLog {
 	) -> Self {
 		Self {
 			current: Arc::new(Mutex::new(Vec::new())),
+			current_head: Arc::new(Mutex::new(None)),
 			sender: sender.clone(),
 			pending: Arc::new(AtomicBool::new(false)),
 			background: Arc::new(AtomicBool::new(false)),
@@ -92,20 +93,17 @@ impl AsyncLog {
 	}
 
 	///
-	fn current_head(&self) -> Result<CommitId> {
-		Ok(self
-			.current
-			.lock()?
-			.first()
-			.map_or(Oid::zero().into(), |f| *f))
+	fn current_head(&self) -> Result<Option<CommitId>> {
+		Ok(*self.current_head.lock()?)
 	}
 
 	///
 	fn head_changed(&self) -> Result<bool> {
 		if let Ok(head) = repo(CWD)?.head() {
-			if let Some(head) = head.target() {
-				return Ok(head != self.current_head()?.into());
-			}
+			return Ok(head.target()
+				!= self
+					.current_head()?
+					.map(|commit_id| commit_id.into()));
 		}
 		Ok(false)
 	}
@@ -131,6 +129,10 @@ impl AsyncLog {
 
 		self.pending.store(true, Ordering::Relaxed);
 
+		if let Ok(head) = repo(CWD)?.head() {
+			*self.current_head.lock()? =
+				head.target().map(CommitId::new);
+		}
 		let filter = self.filter.clone();
 
 		rayon_core::spawn(move || {
@@ -190,6 +192,7 @@ impl AsyncLog {
 
 	fn clear(&mut self) -> Result<()> {
 		self.current.lock()?.clear();
+		*self.current_head.lock()? = None;
 		Ok(())
 	}
 

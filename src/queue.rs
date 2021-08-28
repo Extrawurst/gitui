@@ -70,6 +70,8 @@ pub enum InternalEvent {
 	///
 	BlameFile(String),
 	///
+	OpenFileRevlog(String),
+	///
 	CreateBranch,
 	///
 	RenameBranch(String, String),

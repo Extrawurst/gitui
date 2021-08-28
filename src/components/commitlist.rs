@@ -6,8 +6,8 @@ use crate::{
 	},
 	keys::SharedKeyConfig,
 	strings::{self, symbol},
-	ui::calc_scroll_top,
 	ui::style::{SharedTheme, Theme},
+	ui::{self, calc_scroll_top},
 };
 use anyhow::Result;
 use asyncgit::sync::{CommitId, Tags};
@@ -68,6 +68,11 @@ impl CommitList {
 	///
 	pub fn items(&mut self) -> &mut ItemBatch {
 		&mut self.items
+	}
+
+	///
+	pub fn set_title(&mut self, title: &str) {
+		self.title = title.into();
 	}
 
 	///
@@ -407,6 +412,15 @@ impl DrawableComponent for CommitList {
 			)
 			.alignment(Alignment::Left),
 			area,
+		);
+
+		ui::draw_scrollbar(
+			f,
+			area,
+			&self.theme,
+			self.count_total
+				.saturating_sub(height_in_lines.saturating_sub(2)),
+			self.selection,
 		);
 
 		Ok(())

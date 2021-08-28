@@ -7,7 +7,7 @@ pub mod blame;
 pub mod branch;
 mod commit;
 mod commit_details;
-mod commit_files;
+pub mod commit_files;
 mod commits_info;
 mod config;
 pub mod cred;
@@ -56,7 +56,7 @@ pub use hooks::{
 };
 pub use hunks::{reset_hunk, stage_hunk, unstage_hunk};
 pub use ignore::add_to_ignore;
-pub use logwalker::{LogWalker, LogWalkerFilter};
+pub use logwalker::{diff_contains_file, LogWalker, LogWalkerFilter};
 pub use merge::{
 	abort_merge, merge_branch, merge_commit, merge_msg,
 	mergehead_ids, rebase_branch,

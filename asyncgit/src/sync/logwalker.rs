@@ -1,5 +1,5 @@
 use super::CommitId;
-use crate::error::Result;
+use crate::{error::Result, sync::commit_files::get_commit_diff};
 use git2::{Commit, Oid, Repository};
 use std::{
 	cmp::Ordering,
@@ -33,6 +33,25 @@ impl<'a> Ord for TimeOrderedCommit<'a> {
 pub type LogWalkerFilter = Arc<
 	Box<dyn Fn(&Repository, &CommitId) -> Result<bool> + Send + Sync>,
 >;
+
+///
+pub fn diff_contains_file(file_path: String) -> LogWalkerFilter {
+	Arc::new(Box::new(
+		move |repo: &Repository,
+		      commit_id: &CommitId|
+		      -> Result<bool> {
+			let diff = get_commit_diff(
+				repo,
+				*commit_id,
+				Some(file_path.clone()),
+			)?;
+
+			let contains_file = diff.deltas().len() > 0;
+
+			Ok(contains_file)
+		},
+	))
+}
 
 ///
 pub struct LogWalker<'a> {
@@ -222,23 +241,11 @@ mod tests {
 
 		assert_eq!(items.len(), 0);
 
-		let diff_contains_bar = |repo: &Repository,
-		                         commit_id: &CommitId|
-		 -> Result<bool> {
-			let diff = get_commit_diff(
-				&repo,
-				*commit_id,
-				Some("bar".into()),
-			)?;
-
-			let contains_file = diff.deltas().len() > 0;
-
-			Ok(contains_file)
-		};
+		let diff_contains_bar = diff_contains_file("bar".into());
 
 		let mut items = Vec::new();
 		let mut walker = LogWalker::new(&repo, 100)?
-			.filter(Some(Arc::new(Box::new(diff_contains_bar))));
+			.filter(Some(diff_contains_bar));
 		walker.read(&mut items).unwrap();
 
 		assert_eq!(items.len(), 0);

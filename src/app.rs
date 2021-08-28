@@ -6,7 +6,7 @@ use crate::{
 		BranchListComponent, CommandBlocking, CommandInfo,
 		CommitComponent, CompareCommitsComponent, Component,
 		ConfirmComponent, CreateBranchComponent, DrawableComponent,
-		ExternalEditorComponent, HelpComponent,
+		ExternalEditorComponent, FileRevlogComponent, HelpComponent,
 		InspectCommitComponent, MsgComponent, OptionsPopupComponent,
 		PullComponent, PushComponent, PushTagsComponent,
 		RenameBranchComponent, RevisionFilesPopup, SharedOptions,
@@ -46,6 +46,7 @@ pub struct App {
 	reset: ConfirmComponent,
 	commit: CommitComponent,
 	blame_file_popup: BlameFileComponent,
+	file_revlog_popup: FileRevlogComponent,
 	stashmsg_popup: StashMsgComponent,
 	inspect_commit_popup: InspectCommitComponent,
 	compare_commits_popup: CompareCommitsComponent,
@@ -109,6 +110,12 @@ impl App {
 				&queue,
 				sender,
 				&strings::blame_title(&key_config),
+				theme.clone(),
+				key_config.clone(),
+			),
+			file_revlog_popup: FileRevlogComponent::new(
+				&queue,
+				sender,
 				theme.clone(),
 				key_config.clone(),
 			),
@@ -375,6 +382,7 @@ impl App {
 			self.stashing_tab.update_git(ev)?;
 			self.revlog.update_git(ev)?;
 			self.blame_file_popup.update_git(ev)?;
+			self.file_revlog_popup.update_git(ev)?;
 			self.inspect_commit_popup.update_git(ev)?;
 			self.compare_commits_popup.update_git(ev)?;
 			self.push_popup.update_git(ev)?;
@@ -406,6 +414,7 @@ impl App {
 			|| self.stashing_tab.anything_pending()
 			|| self.files_tab.anything_pending()
 			|| self.blame_file_popup.any_work_pending()
+			|| self.file_revlog_popup.any_work_pending()
 			|| self.inspect_commit_popup.any_work_pending()
 			|| self.compare_commits_popup.any_work_pending()
 			|| self.input.is_state_changing()
@@ -436,6 +445,7 @@ impl App {
 			reset,
 			commit,
 			blame_file_popup,
+			file_revlog_popup,
 			stashmsg_popup,
 			inspect_commit_popup,
 			compare_commits_popup,
@@ -468,6 +478,7 @@ impl App {
 			inspect_commit_popup,
 			compare_commits_popup,
 			blame_file_popup,
+			file_revlog_popup,
 			external_editor_popup,
 			tag_commit_popup,
 			select_branch_popup,
@@ -635,6 +646,11 @@ impl App {
 			}
 			InternalEvent::BlameFile(path) => {
 				self.blame_file_popup.open(&path)?;
+				flags
+					.insert(NeedsUpdate::ALL | NeedsUpdate::COMMANDS);
+			}
+			InternalEvent::OpenFileRevlog(path) => {
+				self.file_revlog_popup.open(&path)?;
 				flags
 					.insert(NeedsUpdate::ALL | NeedsUpdate::COMMANDS);
 			}

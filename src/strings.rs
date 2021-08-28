@@ -236,6 +236,12 @@ pub fn confirm_msg_force_push(
 pub fn log_title(_key_config: &SharedKeyConfig) -> String {
 	"Commit".to_string()
 }
+pub fn file_log_title(
+	_key_config: &SharedKeyConfig,
+	file_path: &str,
+) -> String {
+	format!("Commits for file {}", file_path)
+}
 pub fn blame_title(_key_config: &SharedKeyConfig) -> String {
 	"Blame".to_string()
 }
@@ -945,6 +951,18 @@ pub mod commands {
 				key_config.get_hint(key_config.blame),
 			),
 			"open blame view of selected file",
+			CMD_GROUP_LOG,
+		)
+	}
+	pub fn open_file_history(
+		key_config: &SharedKeyConfig,
+	) -> CommandText {
+		CommandText::new(
+			format!(
+				"History [{}]",
+				key_config.get_hint(key_config.file_history),
+			),
+			"open history of selected file",
 			CMD_GROUP_LOG,
 		)
 	}

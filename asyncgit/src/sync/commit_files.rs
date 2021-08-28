@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+//! Functions for getting infos about files in commits
 
 use super::{stash::is_stash_commit, utils::repo, CommitId};
 use crate::{
@@ -6,6 +6,7 @@ use crate::{
 };
 use git2::{Diff, DiffDelta, DiffOptions, Repository};
 use scopetime::scope_time;
+use std::cmp::Ordering;
 
 /// get all files that are part of a commit
 pub fn get_commit_files(
@@ -45,6 +46,7 @@ pub fn get_commit_files(
 	Ok(res)
 }
 
+/// get diff of two arbitrary commits
 #[allow(clippy::needless_pass_by_value)]
 pub fn get_compare_commits_diff(
 	repo: &Repository,
@@ -83,17 +85,16 @@ pub fn get_compare_commits_diff(
 	Ok(diff)
 }
 
-#[allow(clippy::redundant_pub_crate)]
-pub(crate) fn get_commit_diff(
+/// get diff of a commit to its first parent
+pub fn get_commit_diff(
 	repo: &Repository,
 	id: CommitId,
 	pathspec: Option<String>,
 ) -> Result<Diff<'_>> {
-	// scope_time!("get_commit_diff");
+	scope_time!("get_commit_diff");
 
 	let commit = repo.find_commit(id.into())?;
 	let commit_tree = commit.tree()?;
-
 	let parent = if commit.parent_count() > 0 {
 		repo.find_commit(commit.parent_id(0)?)
 			.ok()

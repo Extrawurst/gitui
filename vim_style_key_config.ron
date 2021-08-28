@@ -54,6 +54,7 @@
 
     enter: ( code: Enter, modifiers: ( bits: 0,),),
     blame: ( code: Char('B'), modifiers: ( bits: 1,),),
+    file_history: ( code: Char('H'), modifiers: ( bits: 1,),),
 
     edit_file: ( code: Char('I'), modifiers: ( bits: 1,),),
 
